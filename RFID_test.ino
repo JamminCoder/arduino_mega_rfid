@@ -6,6 +6,10 @@
 #define MAX_SIZE_BLOCK  16
 #define greenPin     12
 #define redPin       32
+
+#define RFID_MODE    1 // 0 for read, 1 for both (you must use the serial monitor input to choose)
+
+
 //used in authentication
 MFRC522::MIFARE_Key key;
 //authentication return status code
@@ -183,18 +187,21 @@ void loop()
   // Dump debug info about the card; PICC_HaltA() is automatically called
   //  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));</p><p>  //call menu function and retrieve the desired option
   
-  // int op = menu();
-
-  readingData();
-
-  // if(op == 0) 
-  //   readingData();
-  // else if(op == 1) 
-  //   writingData();
-  // else {
-  //   Serial.println(F("Incorrect Option!"));
-  //   return;
-  // }
+  
+  if (RFID_MODE == 1) {
+    int op = menu();
+    if(op == 0) 
+      readingData();
+    else if(op == 1) 
+      writingData();
+    else {
+      Serial.println(F("Incorrect Option!"));
+      return;
+    }
+  } else {
+    readingData();
+  }
+  
  
   //instructs the PICC when in the ACTIVE state to go to a "STOP" state
   mfrc522.PICC_HaltA(); 
