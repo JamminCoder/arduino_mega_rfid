@@ -1,5 +1,13 @@
 #include <MFRC522.h> //library responsible for communicating with the module RFID-RC522
 #include <SPI.h> //library responsible for communicating of SPI bus
+
+// Wifi
+#include <WiFi.h>
+#include <HTTPClient.h>
+
+#include <regex>
+#include <string>
+
 #define SS_PIN    21
 #define RST_PIN   22
 #define SIZE_BUFFER     18
@@ -7,8 +15,7 @@
 #define greenPin     12
 #define redPin       32
 
-#define RFID_MODE    1 // 0 for read, 1 for both (you must use the serial monitor input to choose)
-
+#define RFID_MODE    0 // 0 for read, 1 for both (you must use the serial monitor input to choose)
 
 //used in authentication
 MFRC522::MIFARE_Key key;
@@ -16,18 +23,37 @@ MFRC522::MIFARE_Key key;
 MFRC522::StatusCode status;
 // Defined pins to module RC522
 MFRC522 mfrc522(SS_PIN, RST_PIN); 
+
+
+String serverName = "http://192.168.42.26:8000/send";
+const char* ssid = "";
+const char* password = "";
+
+void initWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi ..");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
+  }
+  Serial.println(WiFi.localIP());
+}
+
 void setup() 
 {
-  Serial.begin(9600);
+  Serial.begin(115200); 
+  while (!Serial) {;};
+  initWiFi();
+
   SPI.begin(); // Init SPI bus
   pinMode(greenPin, OUTPUT);
   pinMode(redPin, OUTPUT);
   
   // Init MFRC522
   mfrc522.PCD_Init(); 
-  Serial.println("Approach your reader card...");
+  Serial.println("\nApproach your reader card...");
   Serial.println();
-
 }
 
 //menu to operation choice
@@ -52,11 +78,9 @@ int menu()
 }
 
 
-
-
 //reads data from card/tag
 void readingData()
-{
+{ 
   //prints the technical details of the card/tag
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); 
   
@@ -103,6 +127,43 @@ void readingData()
   {
       Serial.write(buffer[i]);
   }
+
+  // Send data to server if possible
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String request_data = "name=";
+
+    // just the username now: "name: username"
+    String card_data = (char*)buffer;
+    
+    int delim_index = card_data.indexOf(": ");
+    String data = card_data.substring(delim_index + 2, card_data.length() - 1);
+    data.replace(" ", "");
+    request_data += data;
+
+    // Your Domain name with URL path or IP address with path
+    Serial.println(data);
+    Serial.println("Sending request");
+    http.begin(serverName);
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    // POST data
+    int httpResponseCode = http.POST(request_data);
+    
+    if (httpResponseCode > 0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
+    }
+    else {
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
+    }
+    // Free resources
+    http.end();
+  }
+
   Serial.println(" ");
 }
 
