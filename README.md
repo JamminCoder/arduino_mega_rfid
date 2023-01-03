@@ -1,5 +1,5 @@
 # RFID Read/Write Test
-#### Code from https://www.instructables.com/ESP32-With-RFID-Access-Control/
+#### Code taken and modified from https://www.instructables.com/ESP32-With-RFID-Access-Control/
 
 ## Testing
 1. First wire up your microcontroller: ![Wiring](https://github.com/zvsoftware/rfid_test/blob/master/rfid_wiring.png?raw=true)
