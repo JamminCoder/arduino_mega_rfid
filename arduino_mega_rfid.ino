@@ -1,19 +1,12 @@
 #include <MFRC522.h> //library responsible for communicating with the module RFID-RC522
 #include <SPI.h> //library responsible for communicating of SPI bus
 
-// Wifi
-#include <WiFi.h>
-#include <HTTPClient.h>
-
-#include <regex>
-#include <string>
-
-#define SS_PIN    21
-#define RST_PIN   22
+#define SS_PIN    53 // SS_PIN IS BOARD DEPENDANT!!
+#define RST_PIN   49
 #define SIZE_BUFFER     18
 #define MAX_SIZE_BLOCK  16
-#define greenPin     12
-#define redPin       32
+#define greenPin     32
+#define redPin       33
 
 #define RFID_MODE    0 // 0 for read, 1 for both (you must use the serial monitor input to choose)
 
@@ -25,26 +18,11 @@ MFRC522::StatusCode status;
 MFRC522 mfrc522(SS_PIN, RST_PIN); 
 
 
-String serverName = "http://192.168.42.26:8000/send";
-const char* ssid = "";
-const char* password = "";
-
-void initWiFi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi ..");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print('.');
-    delay(1000);
-  }
-  Serial.println(WiFi.localIP());
-}
 
 void setup() 
 {
-  Serial.begin(115200); 
+  Serial.begin(9600); 
   while (!Serial) {;};
-  initWiFi();
 
   SPI.begin(); // Init SPI bus
   pinMode(greenPin, OUTPUT);
@@ -126,42 +104,6 @@ void readingData()
   for (uint8_t i = 0; i < MAX_SIZE_BLOCK; i++)
   {
       Serial.write(buffer[i]);
-  }
-
-  // Send data to server if possible
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    String request_data = "name=";
-
-    // just the username now: "name: username"
-    String card_data = (char*)buffer;
-    
-    int delim_index = card_data.indexOf(": ");
-    String data = card_data.substring(delim_index + 2, card_data.length() - 1);
-    data.replace(" ", "");
-    request_data += data;
-
-    // Your Domain name with URL path or IP address with path
-    Serial.println(data);
-    Serial.println("Sending request");
-    http.begin(serverName);
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-    // POST data
-    int httpResponseCode = http.POST(request_data);
-    
-    if (httpResponseCode > 0) {
-      Serial.print("HTTP Response code: ");
-      Serial.println(httpResponseCode);
-      String payload = http.getString();
-      Serial.println(payload);
-    }
-    else {
-      Serial.print("Error code: ");
-      Serial.println(httpResponseCode);
-    }
-    // Free resources
-    http.end();
   }
 
   Serial.println(" ");

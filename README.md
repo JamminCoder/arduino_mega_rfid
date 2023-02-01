@@ -2,7 +2,15 @@
 #### Code taken and modified from https://www.instructables.com/ESP32-With-RFID-Access-Control/
 
 ## Testing
-1. First wire up your microcontroller: ![Wiring](https://github.com/zvsoftware/rfid_test/blob/master/rfid_wiring.png?raw=true)
+1. First wire up your microcontrolller:  
+  - RFID SDA -> Arduino pin 53
+  - RFID SCK -> Arduino pin 52
+  - RFID MOSI -> Arduino 51
+  - RFID MISO -> Arduino 50
+  - RFID RST -> Arduino 49
+  - RFID 3.3v -> Arduino 3.3v
+  - RFID GND -> Arduino GND
+  
 2. Clone this repository's code into a new Arduino project.
 3. Install the MFRC552 library for Arduino: https://github.com/miguelbalboa/rfid.
 4. Upload the code to the Arduino
